@@ -10,9 +10,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Two grids demo</title>
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
     <link rel="stylesheet" href="../dist/gridstack.css"/>
     <link rel="stylesheet" href="../dist/gridstack-extra.css"/>
+    <link rel="stylesheet" href="../css/anicollection.css" />
 
     <script src="../js/jquery.min.js"></script>
     <script src="../js/jquery-ui.js"></script>
@@ -20,6 +21,8 @@
     <script src="../js/lodash.min.js"></script>
     <script src="../dist/gridstack.js"></script>
     <script src="../dist/gridstack.jQueryUI.js"></script>
+    <script src="../js/anijs.js"></script>
+    <script src="../js/knockout-min.js"></script>
 
     <style type="text/css">
         #grid1 {
@@ -126,6 +129,8 @@
             var options = {
                 width: 6,   //网格的列数。默认值为12。
                 float: false,  //允许元素浮动。默认值：false。
+                cell_height:50,  //单元格的高度。默认值为60。
+                min_width: 480,  //最小宽度。如果窗口的宽度小于网格的宽度，将会以单列显示。默认值为768。
                 removable: '.trash',     //删除
                 removeTimeout: 100,      //删除停留时间   
                 acceptWidgets: '.grid-stack-item'
@@ -134,7 +139,7 @@
             $('#grid2').gridstack(options);
             $('#grid3').gridstack(options);
             $('#grid4').gridstack(options);
-            $('.grid-stack').gridstack(options);
+           
             var items = [
                 {x: 0, y: 0, width: 1, height: 2},
                 {x: 3, y: 1, width: 2, height: 2},
@@ -149,7 +154,7 @@
                 var grid = $(this).data('gridstack');
 
                 _.each(items, function (node) {
-                    grid.addWidget($('<div><div class="grid-stack-item-content" /><div/>'),
+                    grid.addWidget($('<div class="grid-stack-item ui-draggable ui-resizable swing animated ui-resizable-autohide" data-anijs><div class="grid-stack-item-content" /><div/>'),
                         node.x, node.y, node.width, node.height);
                 }, this);
             });
@@ -164,7 +169,35 @@
 
 //增加按钮
             
-             $('#add-widget').click(function() {
+            //  $('#add-widget').click(function() {
+            //     addNewWidget();
+            // });
+
+            // function addNewWidget() {
+            //     var grid = $('.grid-stack').data('gridstack');
+            //     grid.addWidget($('<div><div class="grid-stack-item-content"><button >Delete me</button></div></div>'), 0, 0, Math.floor(1 + 3 * Math.random()), Math.floor(1 + 3 * Math.random()), true);
+            // }  
+        
+            $('body').on('click','button',function(){
+       
+                $(this).parents('.grid-stack-item').remove();
+         
+            })
+            
+
+            var self = this;
+            this.grid = $('.grid-stack').data('gridstack');
+            $('.grid-stack').on('added', function(event, items) {
+                // add anijs data to gridstack item
+                for (var i = 0; i < items.length; i++) {
+                    $(items[i].el[0]).attr('data-anijs', 'if: added, do: swing animated, after: $removeAnimations, on: $gridstack');
+                }
+                AniJS.run();
+                self.gridstackNotifier = AniJS.getNotifier('gridstack');
+                // fire added event!
+                self.gridstackNotifier.dispatchEvent('added');
+            });
+            $('#add-widget').click(function() {
                 addNewWidget();
             });
 
@@ -173,11 +206,16 @@
                 grid.addWidget($('<div><div class="grid-stack-item-content"><button data-bind="click: $root.deleteWidget">Delete me</button></div></div>'), 0, 0, Math.floor(1 + 3 * Math.random()), Math.floor(1 + 3 * Math.random()), true);
             }
 
-                
-        
-        
+            var animationHelper = AniJS.getHelper();
+
+            //Defining removeAnimations to remove existing animations
+            animationHelper.removeAnimations = function(e, animationContext){
+                $('.grid-stack-item').attr('data-anijs', '');
+            };           
+            //             
         })
 
     </script>
+
 </body>
 </html>
